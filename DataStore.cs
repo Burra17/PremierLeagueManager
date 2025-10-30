@@ -1,49 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace PremierLeagueManager
 {
-    public class DataStore <T> // Generisk klass för att hantera datalagring
+    public class DataStore<T> // Generisk klass för datalagring
     {
-        private List<T> items; // Lista för att lagra objekt av typ T
-        // Konstruktor för att initiera datalagringen
-        public DataStore()
-        {
-            items = new List<T>();
-        }
-        // Metod för att lägga till ett objekt i datalagringen
+        public List<T> Items { get; private set; } = new();
+
+        // === Lägg till objekt ===
         public void AddItem(T item)
         {
-            items.Add(item);
+            Items.Add(item);
         }
-        // Metod för att ta bort ett objekt från datalagringen
+
+        // === Ta bort objekt ===
         public bool RemoveItem(T item)
         {
-            return items.Remove(item);
+            return Items.Remove(item);
         }
 
-        // Metod för att hämta alla objekt från datalagringen
-        public List<T> GetAllItems()
-        {
-            return items;
-        }
+        // === Hämta alla objekt ===
+        public List<T> GetAllItems() => Items;
 
-        // Metod för att hitta objekt baserat på ett villkor
+        // === Hitta objekt utifrån villkor ===
         public List<T> FindItems(Func<T, bool> predicate)
         {
-            return items.Where(predicate).ToList();
+            return Items.Where(predicate).ToList();
         }
 
-        // Metod för att spara till json-fil
+        // === Rensa listan ===
+        public void Clear() => Items.Clear();
+
+        // === Spara till JSON ===
         public void SaveToJson(string filePath)
         {
-            try 
+            try
             {
-                var json = System.Text.Json.JsonSerializer.Serialize(items);
-                System.IO.File.WriteAllText(filePath, json);
+                var options = new JsonSerializerOptions { WriteIndented = true }; // snygg JSON
+                var json = JsonSerializer.Serialize(Items, options);
+                File.WriteAllText(filePath, json);
+                Console.WriteLine($"✔ Saved {Items.Count} items to {filePath}");
             }
             catch (Exception ex)
             {
@@ -51,16 +50,16 @@ namespace PremierLeagueManager
             }
         }
 
-        // Metod för att ladda från json-fil
+        // === Läs in från JSON ===
         public void LoadFromJson(string filePath)
         {
             try
             {
-            if (System.IO.File.Exists(filePath))
-            {
-                var json = System.IO.File.ReadAllText(filePath);
-                items = System.Text.Json.JsonSerializer.Deserialize<List<T>>(json) ?? new List<T>();
-            }
+                if (File.Exists(filePath))
+                {
+                    var json = File.ReadAllText(filePath);
+                    Items = JsonSerializer.Deserialize<List<T>>(json) ?? new List<T>();
+                }
             }
             catch (Exception ex)
             {
