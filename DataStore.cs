@@ -40,17 +40,31 @@ namespace PremierLeagueManager
         // Metod för att spara till json-fil
         public void SaveToJson(string filePath)
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(items);
-            System.IO.File.WriteAllText(filePath, json);
+            try 
+            {
+                var json = System.Text.Json.JsonSerializer.Serialize(items);
+                System.IO.File.WriteAllText(filePath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving to JSON: {ex.Message}");
+            }
         }
 
         // Metod för att ladda från json-fil
         public void LoadFromJson(string filePath)
         {
+            try
+            {
             if (System.IO.File.Exists(filePath))
             {
                 var json = System.IO.File.ReadAllText(filePath);
                 items = System.Text.Json.JsonSerializer.Deserialize<List<T>>(json) ?? new List<T>();
+            }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading from JSON: {ex.Message}");
             }
         }
     }
