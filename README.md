@@ -1,20 +1,21 @@
 # 🏆 Premier League Manager
 
-> Ett färgstarkt och interaktivt **C#-konsolprogram** för att hantera lag, spelare och statistik —  
-> komplett med färg, animationer, JSON-lagring och AI-generering av fotbollslag via **OpenAI API** ⚽🤖
+> Ett färgstarkt och interaktivt **C#-konsolprogram** där du kan hantera Premier League-lag, spelare och statistik —  
+> komplett med färg, animationer, JSON-lagring och AI-genererade lag via **OpenAI API** ⚽🤖
 
 ---
 
 ## 📖 Projektöversikt
 
-**PremierLeagueManager** är ett konsolbaserat verktyg byggt i **.NET 8 / C#**, utvecklat som ett skol- och portföljprojekt.  
-Programmet låter dig:
+**PremierLeagueManager** är byggt i **.NET 8 / C#** och skapades som ett skol- och portföljprojekt.  
+Programmet kombinerar klassisk statistikhantering med modern terminaldesign och AI-generering.  
 
-- Skapa och hantera lag och spelare  
-- Visa tabeller, topplistor och statistik  
-- Spara all data lokalt i JSON-filer  
-- Generera realistiska lag med **AI (GPT-4o-mini)**  
-- Njuta av ett snyggt terminalgränssnitt byggt med **Spectre.Console**
+Du kan:
+- 🧱 Skapa och hantera lag & spelare  
+- 📊 Visa ligatabeller och topplistor  
+- 💾 Spara och läsa data från JSON-filer  
+- 🤖 Låta AI skapa lag automatiskt via OpenAI:s GPT-4o-modell  
+- 🎨 Uppleva ett snyggt och färggrant terminalgränssnitt med **Spectre.Console**
 
 ---
 
@@ -22,27 +23,28 @@ Programmet låter dig:
 
 | Typ | Beskrivning |
 |-----|--------------|
-| 💅 **Färgrikt UI** | Byggt med *Spectre.Console* — färg, tabeller, animationer |
-| 🧾 **JSON-lagring** | Sparar data i `data/teams.json` och `data/players.json` |
-| 🤖 **AI-lagbyggare** | Skapar lag med manager, statistik och spelare via OpenAI |
-| 🧹 **Reset-funktion** | Rensar all ligadata med bekräftelse och animation |
+| 💅 **Färgrikt UI** | Byggt med *Spectre.Console* för färg, tabeller och animationer |
+| 🧾 **JSON-lagring** | Sparar all data lokalt i `data/teams.json` och `data/players.json` |
+| 🤖 **AI-lagbyggare** | Genererar lag, manager och spelare via OpenAI |
+| 🧹 **Reset-funktion** | Rensar ligadata med bekräftelse och animation |
 | 💾 **Save & Exit** | Sparar och avslutar med snygg animation |
-| 📊 **Statistik** | Visar topplistor och summerad statistik |
+| 📊 **Statistik** | Visar tabeller, målgörare och lagpoäng |
 
 ---
 
 ## 🧰 Teknikstack
 
 - **C# / .NET 8.0**  
-- **Spectre.Console** – färg, tabeller och animationer  
-- **System.Text.Json** – JSON-hantering  
-- **OpenAI API** – AI-generering av lag  
+- **Spectre.Console** – för färg, tabeller, text och spinners  
+- **System.Text.Json** – för JSON-hantering  
+- **OpenAI API (GPT-4o-mini)** – för AI-generering av lag och spelare  
 
 ---
 
 ## ⚙️ Installation
 
 ### 1️⃣ Klona projektet
+
 Kör följande i terminalen:
 
 ```bash
