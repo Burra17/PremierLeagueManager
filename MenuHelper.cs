@@ -6,112 +6,124 @@ namespace PremierLeagueManager
 {
     public static class MenuHelper
     {
+        // === ⚽ Huvudmeny ===
         public static string ShowMainMenu()
         {
             Console.Clear();
 
-            // Titel i stor, snygg text
+            // Titel
             AnsiConsole.Write(
                 new FigletText("Premier League Manager")
                     .Centered()
                     .Color(Color.Red));
 
-            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[yellow]Welcome, Manager![/]\n");
 
-            // Valmeny med färger och emojis
             var choice = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("[yellow]⚽ Välj ett alternativ:[/]")
-                    .HighlightStyle(new Style(foreground: Color.Green, decoration: Decoration.Bold))
+                    .Title("[bold yellow]⚽ Main Menu[/]")
+                    .HighlightStyle(new Style(Color.Green, decoration: Decoration.Bold))
                     .PageSize(10)
                     .AddChoices(new[]
                     {
                         "➕ Add Team",
-                        "📊 Show Team Table",
                         "👟 Add Player",
+                        "📊 Show Team Table",
                         "🏆 Show Top Scorers",
+                        "🤖 Generate Team (AI)",
+                        "🧹 Reset League Data",
                         "💾 Save and Exit"
                     }));
 
             return choice;
         }
 
-        // === Hjälpmetoder ===
+        // === 📘 Sektionstitel ===
         public static void ShowSectionTitle(string title)
         {
-            AnsiConsole.MarkupLine($"\n[bold cyan]{title}[/]\n");
+            var safeTitle = Markup.Escape(title);
+            AnsiConsole.Write(new Rule($"[bold cyan]{safeTitle}[/]").LeftJustified());
+            AnsiConsole.WriteLine();
         }
 
+        // === ✅ Framgång ===
         public static void ShowSuccess(string message)
         {
-            AnsiConsole.MarkupLine($"[green]✔ {message}[/]");
+            var safe = Markup.Escape(message);
+            AnsiConsole.MarkupLine($"[green]✔ {safe}[/]");
         }
 
+        // === ❌ Fel ===
         public static void ShowError(string message)
         {
-            AnsiConsole.MarkupLine($"[red]❌ {message}[/]");
+            var safe = Markup.Escape(message);
+            AnsiConsole.MarkupLine($"[red]❌ {safe}[/]");
         }
 
-        // === 🔥 Snygg spar-animation utan error ===
+        // === 💾 Sparanimation ===
         public static void ShowSaveAnimation()
         {
             Console.Clear();
+
             AnsiConsole.Write(
                 new FigletText("Saving Data...")
                     .Centered()
                     .Color(Color.Yellow));
 
-            Thread.Sleep(800);
+            Thread.Sleep(500);
 
-            // Spinner med textfaser
+            // Status (utan Parse)
             AnsiConsole.Status()
                 .Spinner(Spinner.Known.BouncingBar)
-                .SpinnerStyle(Style.Parse("green"))
+                .SpinnerStyle(new Style(Color.Green))
                 .Start("Preparing data...", ctx =>
                 {
-                    Thread.Sleep(800);
+                    Thread.Sleep(600);
                     ctx.Status("Writing files...");
-                    Thread.Sleep(1000);
-                    ctx.Status("Finalizing...");
                     Thread.Sleep(800);
+                    ctx.Status("Finalizing...");
+                    Thread.Sleep(500);
                 });
 
-            // Progressbar separat (för att undvika Spectre-error)
+            // Progressbar
             AnsiConsole.WriteLine();
             AnsiConsole.Progress()
                 .HideCompleted(false)
-                .Columns(new ProgressColumn[]
-                {
+                .Columns(
                     new TaskDescriptionColumn(),
                     new ProgressBarColumn(),
                     new PercentageColumn(),
                     new RemainingTimeColumn()
-                })
+                )
                 .Start(ctx =>
                 {
                     var task = ctx.AddTask("[yellow]Saving League Data[/]");
                     while (!task.IsFinished)
                     {
                         task.Increment(5);
-                        Thread.Sleep(70);
+                        Thread.Sleep(60);
                     }
                 });
 
-            // Snyggt avslut med färg och animation
+            // Avslutande text
             AnsiConsole.MarkupLine("\n[bold green]✔ All data saved successfully![/]");
-            AnsiConsole.MarkupLine("[grey]Cleaning up temporary files...[/]");
-            Thread.Sleep(600);
-            AnsiConsole.MarkupLine("[green]✨ Done![/]");
-            Thread.Sleep(600);
+            Thread.Sleep(400);
 
-            // Liten avslutande text med gradient
-            AnsiConsole.Write(
-                new Panel(new Markup("[bold yellow]Goodbye, Manager![/]\n[grey]See you next matchday ⚽[/]"))
-                    .Border(BoxBorder.Rounded)
-                    .BorderColor(Color.Green)
-                    .Header("[bold red]Session Closed[/]")
-                    .HeaderAlignment(Justify.Center)
-                    .Expand());
+            var panel = new Panel(new Markup("[bold yellow]Goodbye, Manager![/]\n[grey]See you next matchday ⚽[/]"))
+                .Border(BoxBorder.Rounded)
+                .BorderColor(Color.Green)
+                .Header("[bold red]Session Closed[/]")
+                .HeaderAlignment(Justify.Center)
+                .Expand();
+
+            AnsiConsole.Write(panel);
+            Thread.Sleep(600);
+        }
+
+        // === 🔁 Bekräftelse för reset ===
+        public static bool ConfirmReset()
+        {
+            return AnsiConsole.Confirm("[bold red]⚠️ Are you sure you want to reset all league data?[/]");
         }
     }
 }
