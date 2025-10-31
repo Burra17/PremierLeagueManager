@@ -29,6 +29,9 @@ namespace PremierLeagueManager
         // === 🤖 Genererar lagdata via OpenAI ===
         public async Task<Team> GenerateTeamAsync(string teamName)
         {
+            // 🎬 Visa AI-animation innan anrop
+            MenuHelper.ShowAIGenerationAnimation();
+
             string prompt = $@"
 You are a football data generator.
 
@@ -66,10 +69,17 @@ Rules:
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync("chat/completions", content);
-            response.EnsureSuccessStatusCode();
+            string responseString = "";
+            await AnsiConsole.Status()
+                .Spinner(Spinner.Known.Dots)
+                .SpinnerStyle(Style.Parse("green"))
+                .StartAsync("Generating team data using AI...", async ctx =>
+                {
+                    var response = await _httpClient.PostAsync("chat/completions", content);
+                    response.EnsureSuccessStatusCode();
+                    responseString = await response.Content.ReadAsStringAsync();
+                });
 
-            var responseString = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(responseString);
             string contentText = doc.RootElement
                 .GetProperty("choices")[0]
@@ -77,7 +87,6 @@ Rules:
                 .GetProperty("content")
                 .GetString();
 
-            // 🧹 Rensa bort ```json fences om de finns
             string cleaned = CleanupJson(contentText);
 
             try
@@ -95,14 +104,14 @@ Rules:
                     Players = new List<Player>()
                 };
 
-                // 🔹 Kort lagbeskrivning
+                // 🏟️ Kort lagbeskrivning
                 if (root.TryGetProperty("description", out var desc))
                 {
                     string text = desc.GetString() ?? "No description available.";
                     AnsiConsole.MarkupLine($"[cyan]\n🏟️  {Markup.Escape(text)}[/]\n");
                 }
 
-                // 🔹 Spelare
+                // 👟 Spelardata
                 if (root.TryGetProperty("players", out var playersEl) && playersEl.ValueKind == JsonValueKind.Array)
                 {
                     foreach (var p in playersEl.EnumerateArray())
@@ -120,13 +129,9 @@ Rules:
                     }
                 }
 
-                // 🔹 Om AI gav tom lista → fallbackspelare
                 if (team.Players.Count == 0)
-                {
                     team.Players = GenerateFallbackPlayers(teamName);
-                }
 
-                // 🧠 Justera ratingar till realistiskt intervall
                 NormalizeRatings(team.Players);
 
                 return team;
@@ -137,79 +142,7 @@ Rules:
             }
         }
 
-        // === Hjälpmetod: ta bort ```json fences ===
-        private static string CleanupJson(string raw)
-        {
-            if (string.IsNullOrWhiteSpace(raw))
-                return "{}";
-
-            string trimmed = raw.Trim();
-
-            if (trimmed.StartsWith("```"))
-            {
-                var lines = trimmed.Split('\n');
-                trimmed = string.Join('\n', lines, 1, lines.Length - 1);
-                trimmed = trimmed.Trim();
-                if (trimmed.EndsWith("```"))
-                    trimmed = trimmed.Substring(0, trimmed.Length - 3);
-            }
-
-            return trimmed.Trim();
-        }
-
-        // === Hjälpmetod: fallbackspelare ===
-        private static List<Player> GenerateFallbackPlayers(string teamName)
-        {
-            return new List<Player>
-            {
-                new Player("Player A", "Forward", 8, 3, teamName, 82),
-                new Player("Player B", "Midfielder", 4, 6, teamName, 79),
-                new Player("Player C", "Defender", 1, 1, teamName, 76),
-                new Player("Player D", "Winger", 5, 2, teamName, 80),
-                new Player("Player E", "Goalkeeper", 0, 0, teamName, 78)
-            };
-        }
-
-        // === Hjälpmetod: justera ratingar (realistiskt intervall per position) ===
-        private void NormalizeRatings(List<Player> players)
-        {
-            foreach (var p in players)
-            {
-                string pos = p.Position.ToLower();
-
-                if (p.Rating < 70 || p.Rating > 99)
-                {
-                    switch (pos)
-                    {
-                        case "goalkeeper":
-                            p.Rating = _rng.Next(75, 90);
-                            break;
-                        case "defender":
-                            p.Rating = _rng.Next(73, 88);
-                            break;
-                        case "midfielder":
-                            p.Rating = _rng.Next(75, 92);
-                            break;
-                        case "forward":
-                        case "winger":
-                            p.Rating = _rng.Next(78, 95);
-                            break;
-                        default:
-                            p.Rating = _rng.Next(70, 90);
-                            break;
-                    }
-                }
-                else
-                {
-                    if (pos.Contains("forward") && p.Rating < 80)
-                        p.Rating += _rng.Next(3, 10);
-                    if (pos.Contains("defender") && p.Rating > 90)
-                        p.Rating -= _rng.Next(3, 7);
-                }
-            }
-        }
-
-        // === 🧠 Interaktiv metod med snygg tabell + totals ===
+        // === 🧠 Interaktiv metod med tabell ===
         public async Task GenerateTeamInteractiveAsync(LeagueService leagueService)
         {
             MenuHelper.ShowSectionTitle("🤖 Generate Team with AI");
@@ -220,7 +153,7 @@ Rules:
                 var generatedTeam = await GenerateTeamAsync(teamName);
                 leagueService.AddTeamFromAI(generatedTeam);
 
-                // 🎨 Visa snygg tabell
+                // 🎨 Visa tabell
                 AnsiConsole.MarkupLine($"\n[bold green]Team generated successfully![/]");
                 AnsiConsole.MarkupLine($"[yellow]{generatedTeam.Name}[/] - [grey]{generatedTeam.Manager}[/]\n");
 
@@ -258,16 +191,60 @@ Rules:
 
                 table.Border(TableBorder.Rounded);
                 table.Centered();
-
                 AnsiConsole.Write(table);
 
-                // 🔢 Totalsummering
                 AnsiConsole.MarkupLine($"\n[bold cyan]Team Totals:[/] [yellow]{totalGoals}[/] goals, [yellow]{totalAssists}[/] assists");
                 AnsiConsole.MarkupLine($"[green]✔ {generatedTeam.Players.Count} players generated for {generatedTeam.Name}![/]");
             }
             catch (Exception ex)
             {
                 MenuHelper.ShowError(ex.Message);
+            }
+        }
+
+        // === Hjälpmetoder ===
+        private static string CleanupJson(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return "{}";
+
+            string trimmed = raw.Trim();
+            if (trimmed.StartsWith("```"))
+            {
+                var lines = trimmed.Split('\n');
+                trimmed = string.Join('\n', lines, 1, lines.Length - 1);
+                trimmed = trimmed.Trim();
+                if (trimmed.EndsWith("```"))
+                    trimmed = trimmed.Substring(0, trimmed.Length - 3);
+            }
+            return trimmed.Trim();
+        }
+
+        private static List<Player> GenerateFallbackPlayers(string teamName) => new()
+        {
+            new Player("Player A", "Forward", 8, 3, teamName, 82),
+            new Player("Player B", "Midfielder", 4, 6, teamName, 79),
+            new Player("Player C", "Defender", 1, 1, teamName, 76),
+            new Player("Player D", "Winger", 5, 2, teamName, 80),
+            new Player("Player E", "Goalkeeper", 0, 0, teamName, 78)
+        };
+
+        private void NormalizeRatings(List<Player> players)
+        {
+            foreach (var p in players)
+            {
+                string pos = p.Position.ToLower();
+                if (p.Rating < 70 || p.Rating > 99)
+                {
+                    p.Rating = pos switch
+                    {
+                        "goalkeeper" => _rng.Next(75, 90),
+                        "defender" => _rng.Next(73, 88),
+                        "midfielder" => _rng.Next(75, 92),
+                        "forward" or "winger" => _rng.Next(78, 95),
+                        _ => _rng.Next(70, 90)
+                    };
+                }
             }
         }
     }
