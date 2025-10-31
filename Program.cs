@@ -22,9 +22,19 @@ namespace PremierLeagueManager
             var leagueService = new LeagueService(teamStore, playerStore, teamFile, playerFile);
             var aiService = new AiAssistanceService();
 
-            // === Ladda data ===
+            // === 🔄 Startanimation ===
+            AnsiConsole.Status()
+                .Spinner(Spinner.Known.Dots)
+                .SpinnerStyle(Style.Parse("cyan"))
+                .Start("Initializing Premier League database...", ctx =>
+                {
+                    System.Threading.Thread.Sleep(1500);
+                });
+
+            // === 📂 Ladda data ===
             AnsiConsole.Status()
                 .Spinner(Spinner.Known.BouncingBar)
+                .SpinnerStyle(Style.Parse("green"))
                 .Start("Loading data...", ctx =>
                 {
                     leagueService.LoadAll();
@@ -64,6 +74,7 @@ namespace PremierLeagueManager
 
                     case "💾 Save and Exit":
                         leagueService.SaveAll();
+                        MenuHelper.ShowSaveAnimation(); // 🧩 visa snygg animation innan exit
                         running = false;
                         break;
                 }
@@ -74,6 +85,10 @@ namespace PremierLeagueManager
                     Console.ReadKey(true);
                 }
             }
+
+            // 🕹️ Visa avslutande meddelande så du hinner se det innan fönstret stänger
+            AnsiConsole.MarkupLine("\n[grey]Press any key to close the program...[/]");
+            Console.ReadKey(true);
         }
     }
 }
